@@ -17,12 +17,10 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            /* Changed to flex-start to prevent vertical jumping */
             justify-content: flex-start; 
             background-color: #eef2f6; 
             color: #2c3e50;
             margin: 0;
-            /* Added extra top padding to push it down from the notch naturally */
             padding: max(40px, 5vh) 20px 0 20px; 
             min-height: 100vh;
             touch-action: none; 
@@ -38,11 +36,10 @@
             align-items: center;
             width: 100%;
             height: 100%;
-            flex: 1; /* Allow container to fill the screen */
+            flex: 1; 
             max-width: 500px; 
         }
 
-        /* Groups the board and top buttons together */
         #puzzle-area {
             display: flex;
             flex-direction: column;
@@ -133,66 +130,66 @@
             pointer-events: none; 
         }
 
-        /* --- Updated D-Pad CSS --- */
+        /* --- Updated TV Remote D-Pad CSS --- */
         #dpad-wrapper {
-            flex: 1; /* Pushes into the remaining bottom space */
+            flex: 1; 
             display: flex;
             justify-content: center;
             align-items: center;
-            width: 100%;
+            width: 100vw; /* Expands to full width to catch all outside touches */
+            margin-left: -20px; /* Offset body padding */
+            margin-right: -20px;
             padding-bottom: 20px;
+            transform: translateY(-15px); /* Moves the whole cluster up a little */
         }
 
         #dpad-container {
             display: grid; 
-            /* Massive, responsive hit-zones */
-            grid-template-columns: clamp(80px, 25vw, 110px) clamp(65px, 18vw, 90px) clamp(80px, 25vw, 110px);
-            grid-template-rows: clamp(80px, 25vw, 110px) clamp(65px, 18vw, 90px) clamp(80px, 25vw, 110px);
-            gap: 8px;
+            grid-template-columns: clamp(70px, 22vw, 100px) clamp(55px, 16vw, 85px) clamp(70px, 22vw, 100px);
+            grid-template-rows: clamp(70px, 22vw, 100px) clamp(55px, 16vw, 85px) clamp(70px, 22vw, 100px);
+            gap: 10px; /* Slightly larger gap to mimic remote segments */
             transition: opacity 0.3s;
+            pointer-events: none; /* Let the wrapper catch the clicks to handle wide hit zones */
         }
 
-        /* When totally disabled via menu */
         #dpad-container.dpad-off {
             opacity: 0;
-            pointer-events: none !important;
+            /* Disable the massive hit zone wrapper entirely when off */
         }
 
         .dpad-btn {
-            background-color: #3498db;
-            color: white;
+            background-color: #222529; /* Dark remote aesthetic */
+            color: #f0f0f0;
             border: none;
             display: flex;
             justify-content: center;
             align-items: center;
             font-size: 28px;
-            cursor: pointer;
             width: 100%;
             height: 100%;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-            -webkit-tap-highlight-color: transparent;
-            user-select: none;
+            box-shadow: inset 0 2px 4px rgba(255,255,255,0.1), 0 6px 12px rgba(0,0,0,0.2);
             transition: background-color 0.1s, transform 0.1s;
         }
 
-        .dpad-btn:active { 
-            background-color: #2980b9; 
-            transform: scale(0.95);
+        /* Programmatic active state triggered by JS for the wide hit zones */
+        .dpad-btn.active-press { 
+            background-color: #0f1215; 
+            transform: scale(0.94);
+            box-shadow: inset 0 4px 8px rgba(0,0,0,0.4), 0 2px 4px rgba(0,0,0,0.1);
         }
 
-        /* Wider, pill-like curves */
-        #dpad-up { grid-column: 2; grid-row: 1; border-radius: 60px 60px 18px 18px; }
-        #dpad-left { grid-column: 1; grid-row: 2; border-radius: 60px 18px 18px 60px; }
-        #dpad-right { grid-column: 3; grid-row: 2; border-radius: 18px 60px 60px 18px; }
-        #dpad-down { grid-column: 2; grid-row: 3; border-radius: 18px 18px 60px 60px; }
+        /* Thick, curved remote wedges */
+        #dpad-up { grid-column: 2; grid-row: 1; border-radius: 60px 60px 14px 14px; }
+        #dpad-left { grid-column: 1; grid-row: 2; border-radius: 60px 14px 14px 60px; }
+        #dpad-right { grid-column: 3; grid-row: 2; border-radius: 14px 60px 60px 14px; }
+        #dpad-down { grid-column: 2; grid-row: 3; border-radius: 14px 14px 60px 60px; }
 
         .dpad-center-hole {
             grid-column: 2; grid-row: 2;
             width: 100%; height: 100%;
             border-radius: 50%;
             background-color: #eef2f6; 
-            box-shadow: inset 0 4px 8px rgba(0,0,0,0.05);
-            pointer-events: none;
+            box-shadow: inset 0 4px 8px rgba(0,0,0,0.1);
             transition: background-color 0.3s;
         }
 
@@ -200,7 +197,6 @@
         body.hide-ui .controls,
         body.hide-ui #dpad-container:not(.dpad-off) {
             opacity: 0;
-            /* They remain clickable due to standard browser behavior when opacity is 0 */
         }
 
         /* Hamburger Menu */
@@ -290,7 +286,7 @@
             box-shadow: inset 0 4px 8px rgba(0,0,0,0.2), 0 8px 16px rgba(0,0,0,0.2);
         }
 
-        body.dark-mode .dpad-center-hole { background-color: #2c3e50; }
+        body.dark-mode .dpad-center-hole { background-color: #2c3e50; box-shadow: inset 0 4px 8px rgba(0,0,0,0.3); }
 
         body.dark-mode .tile.completed {
             box-shadow: inset 0 0 0 4px rgba(255, 255, 255, 0.7), 0 4px 8px rgba(0,0,0,0.4);
@@ -377,11 +373,11 @@
 
         <div id="dpad-wrapper">
             <div id="dpad-container">
-                <button id="dpad-up" class="dpad-btn">▲</button>
-                <button id="dpad-left" class="dpad-btn">◀</button>
+                <div id="dpad-up" class="dpad-btn">▲</div>
+                <div id="dpad-left" class="dpad-btn">◀</div>
                 <div class="dpad-center-hole"></div>
-                <button id="dpad-right" class="dpad-btn">▶</button>
-                <button id="dpad-down" class="dpad-btn">▼</button>
+                <div id="dpad-right" class="dpad-btn">▶</div>
+                <div id="dpad-down" class="dpad-btn">▼</div>
             </div>
         </div>
     </div>
@@ -460,6 +456,7 @@
         const sizeBtn = document.getElementById('size-btn');
         const winMessage = document.getElementById('win-message');
         const dpadContainer = document.getElementById('dpad-container');
+        const dpadWrapper = document.getElementById('dpad-wrapper');
         
         // Menu Buttons
         const easyModeBtn = document.getElementById('easy-mode-btn');
@@ -507,7 +504,7 @@
                 sideMenu.classList.remove('open');
             }
 
-            if (gameOver && !e.target.closest('button')) {
+            if (gameOver && !e.target.closest('button') && !e.target.closest('#dpad-wrapper')) {
                 initGame();
             }
         });
@@ -571,23 +568,63 @@
             initGame();
         });
 
-        const setupDpadBtn = (id, direction) => {
-            const btn = document.getElementById(id);
-            btn.addEventListener('touchstart', (e) => {
-                e.preventDefault(); 
-                tryMove(direction);
-            });
-            btn.addEventListener('click', () => tryMove(direction));
-        };
-        
-        setupDpadBtn('dpad-up', 'up');
-        setupDpadBtn('dpad-down', 'down');
-        setupDpadBtn('dpad-left', 'left');
-        setupDpadBtn('dpad-right', 'right');
+
+        // --- Omnidirectional D-Pad Listener --- //
+        // This calculates the angle of ANY tap in the wrapper area to trigger the right button
+        function handleDpadInteraction(e) {
+            if (gameOver || modalOverlay.style.display === 'flex' || dpadContainer.classList.contains('dpad-off')) return;
+            
+            // Ignore if trying to use menus
+            if (e.target.closest('#hamburger-btn') || e.target.closest('#side-menu')) return;
+
+            e.preventDefault();
+
+            let clientX, clientY;
+            if (e.type === 'touchstart') {
+                clientX = e.touches[0].clientX;
+                clientY = e.touches[0].clientY;
+            } else {
+                clientX = e.clientX;
+                clientY = e.clientY;
+            }
+
+            const rect = dpadContainer.getBoundingClientRect();
+            // Find true center of the D-pad
+            const centerX = rect.left + rect.width / 2;
+            const centerY = rect.top + rect.height / 2;
+
+            const dx = clientX - centerX;
+            const dy = clientY - centerY;
+
+            // Optional deadzone in the very center hole
+            if (Math.abs(dx) < 30 && Math.abs(dy) < 30) return;
+
+            // Calculate angle from center (-180 to 180 degrees)
+            const angle = Math.atan2(dy, dx) * 180 / Math.PI;
+
+            let direction = '';
+            let btnId = '';
+
+            // Map angle to direction
+            if (angle >= -45 && angle < 45) { direction = 'right'; btnId = 'dpad-right'; }
+            else if (angle >= 45 && angle < 135) { direction = 'down'; btnId = 'dpad-down'; }
+            else if (angle >= -135 && angle < -45) { direction = 'up'; btnId = 'dpad-up'; }
+            else { direction = 'left'; btnId = 'dpad-left'; }
+
+            tryMove(direction);
+
+            // Trigger visual feedback on the corresponding button
+            const btn = document.getElementById(btnId);
+            btn.classList.add('active-press');
+            setTimeout(() => btn.classList.remove('active-press'), 120);
+        }
+
+        dpadWrapper.addEventListener('touchstart', handleDpadInteraction, { passive: false });
+        dpadWrapper.addEventListener('mousedown', handleDpadInteraction);
+
 
         function updateLayout() {
             const availableWidth = window.innerWidth - 40; 
-            // Reserve a static height amount so the puzzle doesn't shift when menus toggle
             const availableHeight = window.innerHeight - 340; 
             
             boardSizePx = Math.max(220, Math.min(availableWidth, availableHeight, 500));
@@ -808,14 +845,20 @@
             }
         });
 
+        // Ensure swipe doesn't conflict with the D-pad
         document.addEventListener('touchstart', (e) => {
             if (e.target.closest('button') || e.target.closest('#modal-content') || e.target.closest('#side-menu')) return;
+            // Disable swipe processing if touching the D-pad area while it's active
+            if (e.target.closest('#dpad-wrapper') && !dpadContainer.classList.contains('dpad-off')) return;
+            
             touchStartX = e.changedTouches[0].screenX;
             touchStartY = e.changedTouches[0].screenY;
         }, { passive: true });
 
         document.addEventListener('touchend', (e) => {
             if (e.target.closest('button') || e.target.closest('#modal-content') || e.target.closest('#side-menu')) return;
+            if (e.target.closest('#dpad-wrapper') && !dpadContainer.classList.contains('dpad-off')) return;
+
             touchEndX = e.changedTouches[0].screenX;
             touchEndY = e.changedTouches[0].screenY;
             
