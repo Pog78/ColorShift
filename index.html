@@ -130,72 +130,109 @@
             pointer-events: none; 
         }
 
-        /* --- Updated TV Remote D-Pad CSS --- */
+        /* --- New TV Remote D-Pad CSS --- */
         #dpad-wrapper {
             flex: 1; 
             display: flex;
             justify-content: center;
             align-items: center;
-            width: 100vw; /* Expands to full width to catch all outside touches */
-            margin-left: -20px; /* Offset body padding */
+            width: 100vw; /* Massive hit zone */
+            margin-left: -20px; 
             margin-right: -20px;
             padding-bottom: 20px;
-            transform: translateY(-15px); /* Moves the whole cluster up a little */
-        }
-
-        #dpad-container {
-            display: grid; 
-            grid-template-columns: clamp(70px, 22vw, 100px) clamp(55px, 16vw, 85px) clamp(70px, 22vw, 100px);
-            grid-template-rows: clamp(70px, 22vw, 100px) clamp(55px, 16vw, 85px) clamp(70px, 22vw, 100px);
-            gap: 10px; /* Slightly larger gap to mimic remote segments */
+            transform: translateY(-40px); /* Moved higher up as requested */
             transition: opacity 0.3s;
-            pointer-events: none; /* Let the wrapper catch the clicks to handle wide hit zones */
         }
 
-        #dpad-container.dpad-off {
+        #dpad-wrapper.dpad-off {
             opacity: 0;
-            /* Disable the massive hit zone wrapper entirely when off */
+            pointer-events: none !important;
         }
 
-        .dpad-btn {
-            background-color: #222529; /* Dark remote aesthetic */
-            color: #f0f0f0;
-            border: none;
+        #dpad-visuals {
+            position: relative;
+            width: clamp(180px, 55vw, 250px);
+            height: clamp(180px, 55vw, 250px);
+            border-radius: 50%;
+            background-color: #1a1a1a;
+            box-shadow: inset 0 2px 5px rgba(255,255,255,0.15), 0 10px 25px rgba(0,0,0,0.2);
+            overflow: hidden;
+            pointer-events: none; /* Let the wrapper catch the touches */
+        }
+
+        /* The X lines that cut the circle into 4 curved wedges */
+        #dpad-visuals::before,
+        #dpad-visuals::after {
+            content: '';
+            position: absolute;
+            top: -20%; left: 50%;
+            width: 8px; /* Thickness of the gap between buttons */
+            height: 140%;
+            background-color: #eef2f6; /* Matches app background */
+            transform: translateX(-50%) rotate(45deg);
+            z-index: 2;
+            transition: background-color 0.3s;
+        }
+        #dpad-visuals::after {
+            transform: translateX(-50%) rotate(-45deg);
+        }
+
+        .dpad-center-btn {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            width: 36%;
+            height: 36%;
+            background-color: #1a1a1a;
+            border: 8px solid #eef2f6; /* Gap around center button */
+            border-radius: 50%;
+            z-index: 5;
             display: flex;
             justify-content: center;
             align-items: center;
-            font-size: 28px;
-            width: 100%;
-            height: 100%;
-            box-shadow: inset 0 2px 4px rgba(255,255,255,0.1), 0 6px 12px rgba(0,0,0,0.2);
-            transition: background-color 0.1s, transform 0.1s;
+            color: #ccc;
+            font-size: clamp(0.9rem, 3.5vw, 1.2rem);
+            font-weight: bold;
+            box-sizing: border-box;
+            box-shadow: inset 0 2px 5px rgba(255,255,255,0.1);
+            transition: background-color 0.1s, border-color 0.3s;
         }
 
-        /* Programmatic active state triggered by JS for the wide hit zones */
-        .dpad-btn.active-press { 
-            background-color: #0f1215; 
-            transform: scale(0.94);
-            box-shadow: inset 0 4px 8px rgba(0,0,0,0.4), 0 2px 4px rgba(0,0,0,0.1);
+        /* Directional Arrows */
+        .dpad-arrow {
+            position: absolute;
+            color: #ddd;
+            font-size: clamp(1.2rem, 5vw, 1.8rem);
+            z-index: 1;
         }
+        .dpad-arrow.up { top: 12%; left: 50%; transform: translateX(-50%); }
+        .dpad-arrow.down { bottom: 12%; left: 50%; transform: translateX(-50%); }
+        .dpad-arrow.left { top: 50%; left: 12%; transform: translateY(-50%); }
+        .dpad-arrow.right { top: 50%; right: 12%; transform: translateY(-50%); }
 
-        /* Thick, curved remote wedges */
-        #dpad-up { grid-column: 2; grid-row: 1; border-radius: 60px 60px 14px 14px; }
-        #dpad-left { grid-column: 1; grid-row: 2; border-radius: 60px 14px 14px 60px; }
-        #dpad-right { grid-column: 3; grid-row: 2; border-radius: 14px 60px 60px 14px; }
-        #dpad-down { grid-column: 2; grid-row: 3; border-radius: 14px 14px 60px 60px; }
-
-        .dpad-center-hole {
-            grid-column: 2; grid-row: 2;
-            width: 100%; height: 100%;
-            border-radius: 50%;
-            background-color: #eef2f6; 
-            box-shadow: inset 0 4px 8px rgba(0,0,0,0.1);
-            transition: background-color 0.3s;
+        /* Dynamic Visual Highlights when pressed */
+        .dpad-highlight {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.15);
+            z-index: 3;
+            opacity: 0;
+            transition: opacity 0.1s;
         }
+        /* Clip paths isolate the highlight to just the correct wedge */
+        .dpad-highlight.up { top: 0; left: 0; right: 0; bottom: 50%; clip-path: polygon(50% 100%, 0 0, 100% 0); }
+        .dpad-highlight.down { top: 50%; left: 0; right: 0; bottom: 0; clip-path: polygon(50% 0, 0 100%, 100% 100%); }
+        .dpad-highlight.left { top: 0; left: 0; right: 50%; bottom: 0; clip-path: polygon(100% 50%, 0 0, 0 100%); }
+        .dpad-highlight.right { top: 0; left: 50%; right: 0; bottom: 0; clip-path: polygon(0 50%, 100% 0, 100% 100%); }
+        
+        #dpad-visuals.press-up .dpad-highlight.up { opacity: 1; }
+        #dpad-visuals.press-down .dpad-highlight.down { opacity: 1; }
+        #dpad-visuals.press-left .dpad-highlight.left { opacity: 1; }
+        #dpad-visuals.press-right .dpad-highlight.right { opacity: 1; }
+        #dpad-visuals.press-center .dpad-center-btn { background-color: #333; }
 
         /* --- Hide Buttons CSS --- */
         body.hide-ui .controls,
-        body.hide-ui #dpad-container:not(.dpad-off) {
+        body.hide-ui #dpad-wrapper:not(.dpad-off) {
             opacity: 0;
         }
 
@@ -276,33 +313,19 @@
         }
 
         /* Dark Mode Overrides */
-        body.dark-mode {
-            background-color: #2c3e50;
-            color: #ecf0f1;
-        }
-
-        body.dark-mode #game-board {
-            background-color: #1a252f;
-            box-shadow: inset 0 4px 8px rgba(0,0,0,0.2), 0 8px 16px rgba(0,0,0,0.2);
-        }
-
-        body.dark-mode .dpad-center-hole { background-color: #2c3e50; box-shadow: inset 0 4px 8px rgba(0,0,0,0.3); }
-
-        body.dark-mode .tile.completed {
-            box-shadow: inset 0 0 0 4px rgba(255, 255, 255, 0.7), 0 4px 8px rgba(0,0,0,0.4);
-        }
-
+        body.dark-mode { background-color: #2c3e50; color: #ecf0f1; }
+        body.dark-mode #game-board { background-color: #1a252f; box-shadow: inset 0 4px 8px rgba(0,0,0,0.2), 0 8px 16px rgba(0,0,0,0.2); }
+        body.dark-mode .tile.completed { box-shadow: inset 0 0 0 4px rgba(255, 255, 255, 0.7), 0 4px 8px rgba(0,0,0,0.4); }
         body.dark-mode #hamburger-btn { background-color: #ecf0f1; color: #2c3e50; }
         body.dark-mode #hamburger-btn:hover { background-color: #bdc3c7; }
-
-        body.dark-mode #side-menu, 
-        body.dark-mode #modal-content {
-            background-color: #34495e;
-            color: #ecf0f1;
-        }
-
+        body.dark-mode #side-menu, body.dark-mode #modal-content { background-color: #34495e; color: #ecf0f1; }
         body.dark-mode .menu-btn { background-color: #2c3e50; color: #ecf0f1; }
         body.dark-mode .menu-btn:hover { background-color: #1a252f; }
+        
+        /* Dark mode D-pad lines to match dark background */
+        body.dark-mode #dpad-visuals::before,
+        body.dark-mode #dpad-visuals::after { background-color: #2c3e50; }
+        body.dark-mode .dpad-center-btn { border-color: #2c3e50; }
 
         /* Modal */
         #modal-overlay {
@@ -338,21 +361,8 @@
             cursor: default; 
         }
 
-        #modal-content h2 { 
-            margin-top: 0;
-            margin-bottom: 15px; 
-            color: #3498db; 
-            text-align: center; 
-            font-size: clamp(1.8rem, 7vw, 2.2rem);
-        }
-
-        .author-tag {
-            text-align: center; 
-            font-size: 0.9rem; 
-            margin-top: 35px; 
-            opacity: 0.6;
-            font-weight: bold;
-        }
+        #modal-content h2 { margin-top: 0; margin-bottom: 15px; color: #3498db; text-align: center; font-size: clamp(1.8rem, 7vw, 2.2rem); }
+        .author-tag { text-align: center; font-size: 0.9rem; margin-top: 35px; opacity: 0.6; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -372,12 +382,18 @@
         </div>
 
         <div id="dpad-wrapper">
-            <div id="dpad-container">
-                <div id="dpad-up" class="dpad-btn">▲</div>
-                <div id="dpad-left" class="dpad-btn">◀</div>
-                <div class="dpad-center-hole"></div>
-                <div id="dpad-right" class="dpad-btn">▶</div>
-                <div id="dpad-down" class="dpad-btn">▼</div>
+            <div id="dpad-visuals">
+                <div class="dpad-highlight up"></div>
+                <div class="dpad-highlight right"></div>
+                <div class="dpad-highlight down"></div>
+                <div class="dpad-highlight left"></div>
+                
+                <div class="dpad-arrow up">▲</div>
+                <div class="dpad-arrow right">▶</div>
+                <div class="dpad-arrow down">▼</div>
+                <div class="dpad-arrow left">◀</div>
+                
+                <div class="dpad-center-btn"></div>
             </div>
         </div>
     </div>
@@ -399,7 +415,6 @@
             <p><b>Standard Rules:</b> Tile groups must be arranged in a straight vertical or horizontal line. The white tile must finish exactly in the center of the board to win!</p>
             <p><b>Easy Mode:</b> Groups can be L-shapes, and the white tile can finish anywhere.</p>
             <p>Complete all sets to win! <br><br><i>Press <b>R</b> to restart. Tap anywhere to close this menu.</i></p>
-            
             <div class="author-tag">A Game by Pog</div>
         </div>
     </div>
@@ -421,7 +436,6 @@
         let isDpadMode = false;
         let isUIHidden = false;
 
-        // Load saved preferences
         const savedSizeIndex = localStorage.getItem('colorShift_sizeIndex');
         if (savedSizeIndex !== null) {
             const parsedIndex = parseInt(savedSizeIndex, 10);
@@ -455,17 +469,16 @@
         const restartBtn = document.getElementById('restart-btn');
         const sizeBtn = document.getElementById('size-btn');
         const winMessage = document.getElementById('win-message');
-        const dpadContainer = document.getElementById('dpad-container');
-        const dpadWrapper = document.getElementById('dpad-wrapper');
         
-        // Menu Buttons
+        const dpadWrapper = document.getElementById('dpad-wrapper');
+        const dpadVisuals = document.getElementById('dpad-visuals');
+        
         const easyModeBtn = document.getElementById('easy-mode-btn');
         const darkModeBtn = document.getElementById('dark-mode-btn');
         const dpadBtn = document.getElementById('dpad-btn');
         const hideUIBtn = document.getElementById('hide-ui-btn');
         const helpBtn = document.getElementById('help-btn');
         const hamburgerBtn = document.getElementById('hamburger-btn');
-        
         const sideMenu = document.getElementById('side-menu');
         const modalOverlay = document.getElementById('modal-overlay');
 
@@ -484,7 +497,7 @@
             dpadBtn.classList.add('active');
             dpadBtn.innerText = "D-Pad: ON";
         } else {
-            dpadContainer.classList.add('dpad-off');
+            dpadWrapper.classList.add('dpad-off');
         }
         if (isUIHidden) {
             hideUIBtn.classList.add('active');
@@ -503,7 +516,6 @@
             if (!sideMenu.contains(e.target) && e.target !== hamburgerBtn) {
                 sideMenu.classList.remove('open');
             }
-
             if (gameOver && !e.target.closest('button') && !e.target.closest('#dpad-wrapper')) {
                 initGame();
             }
@@ -548,7 +560,7 @@
             localStorage.setItem('colorShift_dpadMode', isDpadMode);
             dpadBtn.classList.toggle('active', isDpadMode);
             dpadBtn.innerText = `D-Pad: ${isDpadMode ? 'ON' : 'OFF'}`;
-            dpadContainer.classList.toggle('dpad-off', !isDpadMode);
+            dpadWrapper.classList.toggle('dpad-off', !isDpadMode);
         });
 
         hideUIBtn.addEventListener('click', () => {
@@ -569,12 +581,9 @@
         });
 
 
-        // --- Omnidirectional D-Pad Listener --- //
-        // This calculates the angle of ANY tap in the wrapper area to trigger the right button
+        // --- Omnidirectional Remote Listener --- //
         function handleDpadInteraction(e) {
-            if (gameOver || modalOverlay.style.display === 'flex' || dpadContainer.classList.contains('dpad-off')) return;
-            
-            // Ignore if trying to use menus
+            if (gameOver || modalOverlay.style.display === 'flex' || dpadWrapper.classList.contains('dpad-off')) return;
             if (e.target.closest('#hamburger-btn') || e.target.closest('#side-menu')) return;
 
             e.preventDefault();
@@ -588,40 +597,41 @@
                 clientY = e.clientY;
             }
 
-            const rect = dpadContainer.getBoundingClientRect();
-            // Find true center of the D-pad
+            const rect = dpadVisuals.getBoundingClientRect();
             const centerX = rect.left + rect.width / 2;
             const centerY = rect.top + rect.height / 2;
 
             const dx = clientX - centerX;
             const dy = clientY - centerY;
-
-            // Optional deadzone in the very center hole
-            if (Math.abs(dx) < 30 && Math.abs(dy) < 30) return;
-
-            // Calculate angle from center (-180 to 180 degrees)
-            const angle = Math.atan2(dy, dx) * 180 / Math.PI;
-
+            
+            const dist = Math.sqrt(dx*dx + dy*dy);
+            
             let direction = '';
-            let btnId = '';
+            let btnClass = '';
 
-            // Map angle to direction
-            if (angle >= -45 && angle < 45) { direction = 'right'; btnId = 'dpad-right'; }
-            else if (angle >= 45 && angle < 135) { direction = 'down'; btnId = 'dpad-down'; }
-            else if (angle >= -135 && angle < -45) { direction = 'up'; btnId = 'dpad-up'; }
-            else { direction = 'left'; btnId = 'dpad-left'; }
+            // Map center "OK" circle to DOWN movement as requested
+            if (dist < (rect.width * 0.18)) {
+                direction = 'down';
+                btnClass = 'press-center';
+            } else {
+                const angle = Math.atan2(dy, dx) * 180 / Math.PI;
+
+                // Hitbox logic adjusted: Up and Down are 120 degrees wide (huge hitboxes), Left/Right are 60 degrees.
+                if (angle >= -30 && angle < 30) { direction = 'right'; btnClass = 'press-right'; }
+                else if (angle >= 30 && angle < 150) { direction = 'down'; btnClass = 'press-down'; }
+                else if (angle >= -150 && angle < -30) { direction = 'up'; btnClass = 'press-up'; }
+                else { direction = 'left'; btnClass = 'press-left'; }
+            }
 
             tryMove(direction);
 
-            // Trigger visual feedback on the corresponding button
-            const btn = document.getElementById(btnId);
-            btn.classList.add('active-press');
-            setTimeout(() => btn.classList.remove('active-press'), 120);
+            // Visual feedback
+            dpadVisuals.classList.add(btnClass);
+            setTimeout(() => dpadVisuals.classList.remove(btnClass), 100);
         }
 
         dpadWrapper.addEventListener('touchstart', handleDpadInteraction, { passive: false });
         dpadWrapper.addEventListener('mousedown', handleDpadInteraction);
-
 
         function updateLayout() {
             const availableWidth = window.innerWidth - 40; 
@@ -845,11 +855,17 @@
             }
         });
 
-        // Ensure swipe doesn't conflict with the D-pad
+        // Add this to completely kill iOS Safari's Native Pull-to-refresh
+        document.addEventListener('touchmove', function(e) {
+            // Allow scrolling inside the help menu overlay
+            if (!e.target.closest('#modal-content') && !e.target.closest('#side-menu')) {
+                e.preventDefault(); 
+            }
+        }, { passive: false });
+
         document.addEventListener('touchstart', (e) => {
             if (e.target.closest('button') || e.target.closest('#modal-content') || e.target.closest('#side-menu')) return;
-            // Disable swipe processing if touching the D-pad area while it's active
-            if (e.target.closest('#dpad-wrapper') && !dpadContainer.classList.contains('dpad-off')) return;
+            if (e.target.closest('#dpad-wrapper') && !dpadWrapper.classList.contains('dpad-off')) return;
             
             touchStartX = e.changedTouches[0].screenX;
             touchStartY = e.changedTouches[0].screenY;
@@ -857,14 +873,16 @@
 
         document.addEventListener('touchend', (e) => {
             if (e.target.closest('button') || e.target.closest('#modal-content') || e.target.closest('#side-menu')) return;
-            if (e.target.closest('#dpad-wrapper') && !dpadContainer.classList.contains('dpad-off')) return;
+            if (e.target.closest('#dpad-wrapper') && !dpadWrapper.classList.contains('dpad-off')) return;
 
             touchEndX = e.changedTouches[0].screenX;
             touchEndY = e.changedTouches[0].screenY;
             
             const deltaX = touchEndX - touchStartX;
             const deltaY = touchEndY - touchStartY;
-            const swipeThreshold = 10; 
+            
+            // Reverted threshold back to 20 to prevent accidental micro-swipes
+            const swipeThreshold = 20; 
 
             if (Math.abs(deltaX) < swipeThreshold && Math.abs(deltaY) < swipeThreshold) return;
 
