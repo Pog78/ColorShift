@@ -13,7 +13,6 @@
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <style>
         body {
-            /* Clean, modern, minimalist sans-serif font stack */
             font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
             display: flex;
             flex-direction: column;
@@ -39,6 +38,17 @@
             max-width: 500px; 
         }
 
+        /* Controls moved above the game board */
+        .controls { 
+            display: flex;
+            gap: 10px;
+            width: 100%; 
+            justify-content: space-between;
+            flex-shrink: 0;
+            margin-bottom: 20px;
+            transition: opacity 0.3s;
+        }
+
         #game-board {
             position: relative;
             background-color: #e9ecef;
@@ -47,15 +57,6 @@
             box-shadow: inset 0 4px 8px rgba(0,0,0,0.05), 0 8px 16px rgba(0,0,0,0.05);
             box-sizing: content-box;
             transition: background-color 0.3s, box-shadow 0.3s ease;
-            margin-bottom: 20px; 
-        }
-
-        .controls { 
-            display: flex;
-            gap: 10px;
-            width: 100%; 
-            justify-content: space-between;
-            flex-shrink: 0;
         }
 
         .btn {
@@ -118,6 +119,68 @@
             color: #2ecc71;
             display: none;
             margin: 0;
+            pointer-events: none; /* Allows tap-to-replay to click through */
+        }
+
+        /* --- New D-Pad CSS --- */
+        #dpad-container {
+            display: none; 
+            grid-template-columns: 65px 65px 65px;
+            grid-template-rows: 65px 65px 65px;
+            gap: 6px;
+            margin-top: 5px;
+            justify-content: center;
+            align-items: center;
+            transition: opacity 0.3s;
+        }
+
+        #dpad-container.active {
+            display: grid;
+        }
+
+        .dpad-btn {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 24px;
+            cursor: pointer;
+            width: 100%;
+            height: 100%;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+            transition: background-color 0.1s, transform 0.1s;
+        }
+
+        .dpad-btn:active { 
+            background-color: #2980b9; 
+            transform: scale(0.92);
+        }
+
+        /* Curved remote styling */
+        #dpad-up { grid-column: 2; grid-row: 1; border-radius: 40px 40px 12px 12px; }
+        #dpad-left { grid-column: 1; grid-row: 2; border-radius: 40px 12px 12px 40px; }
+        #dpad-right { grid-column: 3; grid-row: 2; border-radius: 12px 40px 40px 12px; }
+        #dpad-down { grid-column: 2; grid-row: 3; border-radius: 12px 12px 40px 40px; }
+
+        .dpad-center-hole {
+            grid-column: 2; grid-row: 2;
+            width: 100%; height: 100%;
+            border-radius: 50%;
+            background-color: #eef2f6; 
+            box-shadow: inset 0 4px 8px rgba(0,0,0,0.05);
+            pointer-events: none;
+            transition: background-color 0.3s;
+        }
+
+        /* --- Hide Buttons CSS --- */
+        body.hide-ui .controls,
+        body.hide-ui #dpad-container {
+            opacity: 0;
+            /* Buttons remain clickable and take up exact layout space */
         }
 
         /* Hamburger Menu */
@@ -185,12 +248,16 @@
 
         .menu-btn:hover { background-color: #bdc3c7; }
 
-        #easy-mode-btn.active {
+        .menu-btn.active {
             background-color: #2ecc71;
             color: white;
             box-shadow: 0 2px 8px rgba(46, 204, 113, 0.4);
         }
-        #easy-mode-btn.active:hover { background-color: #27ae60; }
+        .menu-btn.active:hover { background-color: #27ae60; }
+
+        @media (min-width: 768px) {
+            .mobile-only-btn { display: none !important; }
+        }
 
         /* Dark Mode Overrides */
         body.dark-mode {
@@ -203,16 +270,13 @@
             box-shadow: inset 0 4px 8px rgba(0,0,0,0.2), 0 8px 16px rgba(0,0,0,0.2);
         }
 
+        body.dark-mode .dpad-center-hole { background-color: #2c3e50; }
+
         body.dark-mode .tile.completed {
-            /* Light highlight for dark mode */
             box-shadow: inset 0 0 0 4px rgba(255, 255, 255, 0.7), 0 4px 8px rgba(0,0,0,0.4);
         }
 
-        body.dark-mode #hamburger-btn {
-            background-color: #ecf0f1;
-            color: #2c3e50;
-        }
-
+        body.dark-mode #hamburger-btn { background-color: #ecf0f1; color: #2c3e50; }
         body.dark-mode #hamburger-btn:hover { background-color: #bdc3c7; }
 
         body.dark-mode #side-menu, 
@@ -221,11 +285,7 @@
             color: #ecf0f1;
         }
 
-        body.dark-mode .menu-btn {
-            background-color: #2c3e50;
-            color: #ecf0f1;
-        }
-
+        body.dark-mode .menu-btn { background-color: #2c3e50; color: #ecf0f1; }
         body.dark-mode .menu-btn:hover { background-color: #1a252f; }
 
         /* Modal */
@@ -240,6 +300,7 @@
             opacity: 0;
             transition: opacity 0.3s;
             backdrop-filter: blur(2px);
+            cursor: pointer; /* Indicates tap-to-close */
         }
 
         #modal-content {
@@ -258,6 +319,7 @@
             box-sizing: border-box;
             font-size: clamp(1rem, 4.5vw, 1.15rem);
             line-height: 1.5; 
+            cursor: default; /* Keep normal cursor inside text */
         }
 
         #modal-content h2 { 
@@ -267,36 +329,36 @@
             text-align: center; 
             font-size: clamp(1.8rem, 7vw, 2.2rem);
         }
-        
-        #close-modal {
-            margin-top: 25px;
-            background-color: #3498db;
-            color: white;
-            border: none;
-            padding: 15px 20px;
-            font-size: clamp(1.1rem, 5vw, 1.3rem);
-            font-weight: bold;
-            border-radius: 8px;
-            cursor: pointer;
-            width: 100%;
-            transition: background-color 0.2s;
-        }
 
-        #close-modal:hover { background-color: #2980b9; }
+        .author-tag {
+            text-align: center; 
+            font-size: 0.9rem; 
+            margin-top: 35px; 
+            opacity: 0.6;
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
 
     <div id="game-container">
-        <div id="game-board"></div>
-        
         <div class="controls">
             <button id="restart-btn" class="btn">Restart</button>
             <button id="size-btn" class="btn">Size: Medium</button>
         </div>
 
+        <div id="game-board"></div>
+        
         <div id="status-area">
             <div id="win-message">Puzzle Solved! Great Job!</div>
+        </div>
+
+        <div id="dpad-container">
+            <button id="dpad-up" class="dpad-btn">▲</button>
+            <button id="dpad-left" class="dpad-btn">◀</button>
+            <div class="dpad-center-hole"></div>
+            <button id="dpad-right" class="dpad-btn">▶</button>
+            <button id="dpad-down" class="dpad-btn">▼</button>
         </div>
     </div>
 
@@ -304,18 +366,21 @@
     <div id="side-menu">
         <button id="dark-mode-btn" class="menu-btn">Dark Mode: OFF</button>
         <button id="easy-mode-btn" class="menu-btn">Easy Mode: OFF</button>
+        <button id="dpad-btn" class="menu-btn mobile-only-btn">D-Pad: OFF</button>
+        <button id="hide-ui-btn" class="menu-btn">Hide Buttons: OFF</button>
         <button id="help-btn" class="menu-btn">How to Play</button>
     </div>
 
     <div id="modal-overlay">
         <div id="modal-content">
             <h2>How to Play</h2>
-            <p>Use your <b>Arrow Keys</b>, <b>WASD</b>, or <b>Swipe Anywhere</b> to slide the white tile.</p>
+            <p>Use your <b>Arrow Keys</b>, <b>WASD</b>, <b>Swipe</b>, or the <b>D-Pad</b> to slide the white tile.</p>
             <p>Group all tiles of the same color together (Pairs for 3x3, Trios for 5x5 and 7x7) to complete a set.</p>
             <p><b>Standard Rules:</b> Tile groups must be arranged in a straight vertical or horizontal line. The white tile must finish exactly in the center of the board to win!</p>
             <p><b>Easy Mode:</b> Groups can be L-shapes, and the white tile can finish anywhere.</p>
-            <p>Complete all sets to win! <br><br><i>Press <b>R</b> to restart or toggle this menu from the bottom right.</i></p>
-            <button id="close-modal">Let's Play!</button>
+            <p>Complete all sets to win! <br><br><i>Press <b>R</b> to restart. Tap anywhere to close this menu.</i></p>
+            
+            <div class="author-tag">A Game by Pog</div>
         </div>
     </div>
 
@@ -333,6 +398,8 @@
         let currentSizeIndex = 1; 
         let isEasyMode = false; 
         let isDarkMode = false;
+        let isDpadMode = false;
+        let isUIHidden = false;
 
         // Load saved preferences
         const savedSizeIndex = localStorage.getItem('colorShift_sizeIndex');
@@ -341,11 +408,10 @@
             if (!isNaN(parsedIndex) && parsedIndex >= 0 && parsedIndex < sizes.length) currentSizeIndex = parsedIndex;
         }
 
-        const savedEasyMode = localStorage.getItem('colorShift_easyMode');
-        if (savedEasyMode !== null) isEasyMode = savedEasyMode === 'true';
-
-        const savedDarkMode = localStorage.getItem('colorShift_darkMode');
-        if (savedDarkMode !== null) isDarkMode = savedDarkMode === 'true';
+        if (localStorage.getItem('colorShift_easyMode') === 'true') isEasyMode = true;
+        if (localStorage.getItem('colorShift_darkMode') === 'true') isDarkMode = true;
+        if (localStorage.getItem('colorShift_dpadMode') === 'true') isDpadMode = true;
+        if (localStorage.getItem('colorShift_hideUI') === 'true') isUIHidden = true;
         
         let gridSize = sizes[currentSizeIndex].grid;
         let currentGroupSize = sizes[currentSizeIndex].groupSize;
@@ -368,38 +434,60 @@
         const gameContainer = document.getElementById('game-container');
         const boardElement = document.getElementById('game-board');
         const restartBtn = document.getElementById('restart-btn');
-        const easyModeBtn = document.getElementById('easy-mode-btn');
-        const darkModeBtn = document.getElementById('dark-mode-btn');
         const sizeBtn = document.getElementById('size-btn');
         const winMessage = document.getElementById('win-message');
+        const dpadContainer = document.getElementById('dpad-container');
+        
+        // Menu Buttons
+        const easyModeBtn = document.getElementById('easy-mode-btn');
+        const darkModeBtn = document.getElementById('dark-mode-btn');
+        const dpadBtn = document.getElementById('dpad-btn');
+        const hideUIBtn = document.getElementById('hide-ui-btn');
         const helpBtn = document.getElementById('help-btn');
         const hamburgerBtn = document.getElementById('hamburger-btn');
+        
         const sideMenu = document.getElementById('side-menu');
         const modalOverlay = document.getElementById('modal-overlay');
-        const modalContent = document.getElementById('modal-content');
-        const closeModal = document.getElementById('close-modal');
 
-        // Apply initial visual states based on saved settings
+        // Initial visual states
         sizeBtn.innerText = `Size: ${sizes[currentSizeIndex].name}`;
         
         if (isEasyMode) {
             easyModeBtn.classList.add('active');
             easyModeBtn.innerText = "Easy Mode: ON";
         }
-
         if (isDarkMode) {
             document.body.classList.add('dark-mode');
             darkModeBtn.innerText = "Dark Mode: ON";
         }
+        if (isDpadMode) {
+            dpadBtn.classList.add('active');
+            dpadBtn.innerText = "D-Pad: ON";
+            dpadContainer.classList.add('active');
+        }
+        if (isUIHidden) {
+            hideUIBtn.classList.add('active');
+            hideUIBtn.innerText = "Hide Buttons: ON";
+            document.body.classList.add('hide-ui');
+        }
+
+        // --- Interaction Listeners --- //
 
         hamburgerBtn.addEventListener('click', (e) => {
             e.stopPropagation();
             sideMenu.classList.toggle('open');
         });
 
+        // Tapping screen handles menu closing AND tap-to-replay win state
         document.addEventListener('click', (e) => {
+            // Close side menu if tapping outside
             if (!sideMenu.contains(e.target) && e.target !== hamburgerBtn) {
                 sideMenu.classList.remove('open');
+            }
+
+            // Tap anywhere to replay (ignore if tapping a button)
+            if (gameOver && !e.target.closest('button')) {
+                initGame();
             }
         });
 
@@ -408,48 +496,51 @@
             modalOverlay.style.display = 'flex';
             setTimeout(() => {
                 modalOverlay.style.opacity = '1';
-                modalContent.style.transform = 'translateY(0)';
+                document.getElementById('modal-content').style.transform = 'translateY(0)';
             }, 10);
         }
 
         function hideModal() {
             modalOverlay.style.opacity = '0';
-            modalContent.style.transform = 'translateY(20px)';
+            document.getElementById('modal-content').style.transform = 'translateY(20px)';
             setTimeout(() => { modalOverlay.style.display = 'none'; }, 300);
         }
 
         helpBtn.addEventListener('click', openModal);
-        closeModal.addEventListener('click', hideModal);
-        modalOverlay.addEventListener('click', (e) => {
-            if (e.target === modalOverlay) hideModal();
-        });
+        // Tapping anywhere on the overlay closes it
+        modalOverlay.addEventListener('click', hideModal); 
 
         darkModeBtn.addEventListener('click', () => {
             isDarkMode = !isDarkMode;
             localStorage.setItem('colorShift_darkMode', isDarkMode);
-            
-            if (isDarkMode) {
-                document.body.classList.add('dark-mode');
-                darkModeBtn.innerText = "Dark Mode: ON";
-            } else {
-                document.body.classList.remove('dark-mode');
-                darkModeBtn.innerText = "Dark Mode: OFF";
-            }
+            document.body.classList.toggle('dark-mode', isDarkMode);
+            darkModeBtn.innerText = `Dark Mode: ${isDarkMode ? 'ON' : 'OFF'}`;
         });
 
         easyModeBtn.addEventListener('click', () => {
             isEasyMode = !isEasyMode;
             localStorage.setItem('colorShift_easyMode', isEasyMode);
+            easyModeBtn.classList.toggle('active', isEasyMode);
+            easyModeBtn.innerText = `Easy Mode: ${isEasyMode ? 'ON' : 'OFF'}`;
+            if (isEasyMode) updateVisuals(); 
+            else initGame(); 
+        });
 
-            if (isEasyMode) {
-                easyModeBtn.classList.add('active');
-                easyModeBtn.innerText = "Easy Mode: ON";
-                updateVisuals(); 
-            } else {
-                easyModeBtn.classList.remove('active');
-                easyModeBtn.innerText = "Easy Mode: OFF";
-                initGame(); 
-            }
+        dpadBtn.addEventListener('click', () => {
+            isDpadMode = !isDpadMode;
+            localStorage.setItem('colorShift_dpadMode', isDpadMode);
+            dpadBtn.classList.toggle('active', isDpadMode);
+            dpadBtn.innerText = `D-Pad: ${isDpadMode ? 'ON' : 'OFF'}`;
+            dpadContainer.classList.toggle('active', isDpadMode);
+            updateLayout();
+        });
+
+        hideUIBtn.addEventListener('click', () => {
+            isUIHidden = !isUIHidden;
+            localStorage.setItem('colorShift_hideUI', isUIHidden);
+            hideUIBtn.classList.toggle('active', isUIHidden);
+            hideUIBtn.innerText = `Hide Buttons: ${isUIHidden ? 'ON' : 'OFF'}`;
+            document.body.classList.toggle('hide-ui', isUIHidden);
         });
 
         sizeBtn.addEventListener('click', () => {
@@ -461,9 +552,26 @@
             initGame();
         });
 
+        // Add D-pad listeners (touchstart for instant mobile response)
+        const setupDpadBtn = (id, direction) => {
+            const btn = document.getElementById(id);
+            btn.addEventListener('touchstart', (e) => {
+                e.preventDefault(); // Prevents double firing with click
+                tryMove(direction);
+            });
+            btn.addEventListener('click', () => tryMove(direction));
+        };
+        
+        setupDpadBtn('dpad-up', 'up');
+        setupDpadBtn('dpad-down', 'down');
+        setupDpadBtn('dpad-left', 'left');
+        setupDpadBtn('dpad-right', 'right');
+
         function updateLayout() {
+            // Adjust available height if D-Pad is active to prevent scrolling
+            const dpadOffset = isDpadMode ? 220 : 150;
             const availableWidth = window.innerWidth - 40; 
-            const availableHeight = window.innerHeight - 150; 
+            const availableHeight = window.innerHeight - dpadOffset; 
             
             boardSizePx = Math.max(250, Math.min(availableWidth, availableHeight, 500));
             
@@ -693,13 +801,10 @@
             if (e.target.closest('button') || e.target.closest('#modal-content') || e.target.closest('#side-menu')) return;
             touchEndX = e.changedTouches[0].screenX;
             touchEndY = e.changedTouches[0].screenY;
-            handleSwipe();
-        }, { passive: true });
-
-        function handleSwipe() {
+            
             const deltaX = touchEndX - touchStartX;
             const deltaY = touchEndY - touchStartY;
-            const swipeThreshold = 20; 
+            const swipeThreshold = 10; 
 
             if (Math.abs(deltaX) < swipeThreshold && Math.abs(deltaY) < swipeThreshold) return;
 
@@ -710,7 +815,7 @@
                 if (deltaY > 0) tryMove('down');
                 else tryMove('up');
             }
-        }
+        }, { passive: true });
 
         restartBtn.addEventListener('click', initGame);
 
