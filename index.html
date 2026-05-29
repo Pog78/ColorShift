@@ -140,7 +140,7 @@
             margin-left: -20px; 
             margin-right: -20px;
             padding-bottom: 20px;
-            transform: translateY(-40px); /* Moved higher up as requested */
+            transform: translateY(-40px); /* Moved higher up */
             transition: opacity 0.3s;
         }
 
@@ -491,7 +491,9 @@
             if (!sideMenu.contains(e.target) && e.target !== hamburgerBtn) {
                 sideMenu.classList.remove('open');
             }
-            if (gameOver && !e.target.closest('button') && !e.target.closest('#dpad-wrapper')) {
+            
+            // Allow tapping anywhere to restart the game, provided it's not the menu button
+            if (gameOver && !e.target.closest('#hamburger-btn') && !e.target.closest('#side-menu')) {
                 initGame();
             }
         });
@@ -535,7 +537,10 @@
             localStorage.setItem('colorShift_dpadMode', isDpadMode);
             dpadBtn.classList.toggle('active', isDpadMode);
             dpadBtn.innerText = `D-Pad: ${isDpadMode ? 'ON' : 'OFF'}`;
-            dpadWrapper.classList.toggle('dpad-off', !isDpadMode);
+            // Only update D-pad visibility here if the game is active
+            if (!gameOver) {
+                dpadWrapper.classList.toggle('dpad-off', !isDpadMode);
+            }
         });
 
         hideUIBtn.addEventListener('click', () => {
@@ -554,7 +559,6 @@
             sizeBtn.innerText = `Size: ${sizes[currentSizeIndex].name}`;
             initGame();
         });
-
 
         // --- Omnidirectional Remote Listener --- //
         function handleDpadInteraction(e) {
@@ -671,6 +675,11 @@
             restartBtn.innerText = "Restart";
             winMessage.style.display = 'none';
 
+            // Bring the D-pad back if it's supposed to be on
+            if (isDpadMode) {
+                dpadWrapper.classList.remove('dpad-off');
+            }
+
             updateLayout(); 
         }
 
@@ -701,8 +710,11 @@
 
             if (hasWon && !gameOver) {
                 winMessage.style.display = 'block';
-                restartBtn.innerText = "Replay";
+                restartBtn.innerText = "Tap Anywhere to Replay"; // Updated button text to hint at functionality
                 gameOver = true;
+                
+                // Hide D-pad upon winning
+                dpadWrapper.classList.add('dpad-off');
                 
                 const dynamicCount = Math.max(100, Math.min(Math.floor(window.innerWidth * 0.4), 500));
                 const dynamicSpread = Math.max(50, Math.min(Math.floor(window.innerWidth * 0.15), 160));
@@ -848,7 +860,6 @@
             const deltaX = touchEndX - touchStartX;
             const deltaY = touchEndY - touchStartY;
             
-            // Reverted threshold back to 20 to prevent accidental micro-swipes
             const swipeThreshold = 20; 
 
             if (Math.abs(deltaX) < swipeThreshold && Math.abs(deltaY) < swipeThreshold) return;
