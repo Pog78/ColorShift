@@ -131,10 +131,9 @@
             pointer-events: none; 
         }
 
-        /* --- New TV Remote D-Pad CSS --- */
-        #dpad-wrapper {
+        /* --- Input Controller Wrappers --- */
+        .controller-wrapper {
             flex: 1; 
-            display: flex;
             justify-content: center;
             align-items: center;
             width: 100vw; 
@@ -143,13 +142,14 @@
             padding-bottom: 20px;
             transform: translateY(-40px); 
             transition: opacity 0.3s;
+            display: none; /* Hidden by default, toggled by JS */
         }
 
-        #dpad-wrapper.dpad-off {
-            opacity: 0;
-            pointer-events: none !important;
+        .controller-wrapper.active {
+            display: flex;
         }
 
+        /* --- D-Pad Styles --- */
         #dpad-visuals {
             position: relative;
             width: clamp(180px, 55vw, 250px);
@@ -161,7 +161,6 @@
             pointer-events: none; 
         }
 
-        /* The X lines that cut the circle into 4 curved wedges */
         #dpad-visuals::before,
         #dpad-visuals::after {
             content: '';
@@ -178,7 +177,6 @@
             transform: translateX(-50%) rotate(-45deg);
         }
 
-        /* Directional Arrows */
         .dpad-arrow {
             position: absolute;
             color: #ccc;
@@ -190,7 +188,6 @@
         .dpad-arrow.left { top: 50%; left: 12%; transform: translateY(-50%); }
         .dpad-arrow.right { top: 50%; right: 12%; transform: translateY(-50%); }
 
-        /* Dynamic Visual Highlights when pressed */
         .dpad-highlight {
             position: absolute;
             background: rgba(0, 0, 0, 0.05);
@@ -198,7 +195,6 @@
             opacity: 0;
             transition: opacity 0.1s;
         }
-        /* Clip paths isolate the highlight to just the correct wedge */
         .dpad-highlight.up { top: 0; left: 0; right: 0; bottom: 50%; clip-path: polygon(50% 100%, 0 0, 100% 0); }
         .dpad-highlight.down { top: 50%; left: 0; right: 0; bottom: 0; clip-path: polygon(50% 0, 0 100%, 100% 100%); }
         .dpad-highlight.left { top: 0; left: 0; right: 50%; bottom: 0; clip-path: polygon(100% 50%, 0 0, 0 100%); }
@@ -209,13 +205,42 @@
         #dpad-visuals.press-left .dpad-highlight.left { opacity: 1; }
         #dpad-visuals.press-right .dpad-highlight.right { opacity: 1; }
 
-        /* --- Hide Buttons CSS --- */
-        body.hide-ui .controls,
-        body.hide-ui #dpad-wrapper:not(.dpad-off) {
-            opacity: 0;
+        /* --- Joystick Styles --- */
+        #joystick-base {
+            position: relative;
+            width: clamp(160px, 50vw, 220px);
+            height: clamp(160px, 50vw, 220px);
+            border-radius: 50%;
+            border: 2px solid #ccc;
+            background-color: transparent;
+            touch-action: none;
         }
 
-        /* Hamburger Menu */
+        #joystick-stick {
+            position: absolute;
+            top: 50%; left: 50%;
+            width: 40%; height: 40%;
+            border-radius: 50%;
+            background-color: transparent;
+            border: 2px solid #ccc;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            transition: transform 0.15s ease-out; /* Snaps back smoothly */
+        }
+        
+        /* Remove snap-back transition when actively dragging */
+        #joystick-base.active #joystick-stick {
+            transition: none; 
+        }
+
+        /* --- Hide Buttons CSS --- */
+        body.hide-ui .controls,
+        body.hide-ui .controller-wrapper {
+            opacity: 0 !important;
+            pointer-events: none;
+        }
+
+        /* --- Hamburger Menu --- */
         #hamburger-btn {
             position: fixed;
             bottom: 20px;
@@ -236,10 +261,7 @@
             transition: transform 0.2s, background-color 0.3s, color 0.3s;
         }
 
-        #hamburger-btn:hover {
-            transform: scale(1.05);
-            background-color: #1a252f;
-        }
+        #hamburger-btn:hover { transform: scale(1.05); background-color: #1a252f; }
 
         #side-menu {
             position: fixed;
@@ -298,22 +320,20 @@
         body.dark-mode #hamburger-btn { background-color: #ecf0f1; color: #2c3e50; }
         body.dark-mode #hamburger-btn:hover { background-color: #bdc3c7; }
         body.dark-mode #side-menu, body.dark-mode #modal-content { background-color: #34495e; color: #ecf0f1; }
-        
         body.dark-mode .menu-btn { background-color: #2c3e50; color: #ecf0f1; }
         body.dark-mode .menu-btn:hover { background-color: #1a252f; }
-        
-        /* Preserves the active green color in dark mode */
         body.dark-mode .menu-btn.active { background-color: #2ecc71; color: white; box-shadow: 0 2px 8px rgba(46, 204, 113, 0.4); }
         body.dark-mode .menu-btn.active:hover { background-color: #27ae60; }
 
-        /* Dark mode D-pad lines to match dark background */
+        /* Dark mode Controller Overrides */
         body.dark-mode #dpad-visuals { border-color: #666; }
         body.dark-mode #dpad-visuals::before,
         body.dark-mode #dpad-visuals::after { background-color: #666; }
         body.dark-mode .dpad-arrow { color: #666; }
-        
-        /* Softer D-pad highlight flash in dark mode */
         body.dark-mode .dpad-highlight { background: rgba(255, 255, 255, 0.05); }
+        
+        body.dark-mode #joystick-base { border-color: #666; }
+        body.dark-mode #joystick-stick { border-color: #666; background-color: rgba(255,255,255,0.05); }
 
         /* Modal */
         #modal-overlay {
@@ -369,7 +389,7 @@
             </div>
         </div>
 
-        <div id="dpad-wrapper">
+        <div id="dpad-wrapper" class="controller-wrapper">
             <div id="dpad-visuals">
                 <div class="dpad-highlight up"></div>
                 <div class="dpad-highlight right"></div>
@@ -382,6 +402,12 @@
                 <div class="dpad-arrow left">◀</div>
             </div>
         </div>
+
+        <div id="joystick-wrapper" class="controller-wrapper">
+            <div id="joystick-base">
+                <div id="joystick-stick"></div>
+            </div>
+        </div>
     </div>
 
     <button id="hamburger-btn">☰</button>
@@ -389,6 +415,7 @@
         <button id="dark-mode-btn" class="menu-btn">Dark Mode: OFF</button>
         <button id="easy-mode-btn" class="menu-btn">Easy Mode: OFF</button>
         <button id="dpad-btn" class="menu-btn mobile-only-btn">D-Pad: OFF</button>
+        <button id="joystick-btn" class="menu-btn mobile-only-btn">Joystick: OFF</button>
         <button id="hide-ui-btn" class="menu-btn">Hide Buttons: OFF</button>
         <button id="help-btn" class="menu-btn">How to Play</button>
     </div>
@@ -396,7 +423,7 @@
     <div id="modal-overlay">
         <div id="modal-content">
             <h2>How to Play</h2>
-            <p>Use your <b>Arrow Keys</b>, <b>WASD</b>, <b>Swipe</b>, or the <b>D-Pad</b> to slide the white tile.</p>
+            <p>Use your <b>Arrow Keys</b>, <b>WASD</b>, <b>Swipe</b>, the <b>D-Pad</b>, or <b>Joystick</b> to slide the white tile.</p>
             <p>Group all tiles of the same color together (Pairs for 3x3, Trios for 5x5 and 7x7) to complete a set.</p>
             <p><b>Standard Rules:</b> Tile groups must be arranged in a straight vertical or horizontal line. The white tile must finish exactly in the center of the board to win!</p>
             <p><b>Easy Mode:</b> Groups can be L-shapes, and the white tile can finish anywhere.</p>
@@ -420,8 +447,10 @@
         let isEasyMode = false; 
         let isDarkMode = false;
         let isDpadMode = false;
+        let isJoystickMode = false;
         let isUIHidden = false;
 
+        // Load Settings
         const savedSizeIndex = localStorage.getItem('colorShift_sizeIndex');
         if (savedSizeIndex !== null) {
             const parsedIndex = parseInt(savedSizeIndex, 10);
@@ -431,8 +460,15 @@
         if (localStorage.getItem('colorShift_easyMode') === 'true') isEasyMode = true;
         if (localStorage.getItem('colorShift_darkMode') === 'true') isDarkMode = true;
         if (localStorage.getItem('colorShift_dpadMode') === 'true') isDpadMode = true;
+        if (localStorage.getItem('colorShift_joystickMode') === 'true') isJoystickMode = true;
         if (localStorage.getItem('colorShift_hideUI') === 'true') isUIHidden = true;
         
+        // Safeguard mutually exclusive controllers from bad local storage state
+        if (isDpadMode && isJoystickMode) {
+            isJoystickMode = false;
+            localStorage.setItem('colorShift_joystickMode', false);
+        }
+
         let gridSize = sizes[currentSizeIndex].grid;
         let currentGroupSize = sizes[currentSizeIndex].groupSize;
         
@@ -451,6 +487,7 @@
         let touchEndX = 0;
         let touchEndY = 0;
 
+        // UI Elements
         const boardElement = document.getElementById('game-board');
         const restartBtn = document.getElementById('restart-btn');
         const sizeBtn = document.getElementById('size-btn');
@@ -458,10 +495,14 @@
         
         const dpadWrapper = document.getElementById('dpad-wrapper');
         const dpadVisuals = document.getElementById('dpad-visuals');
+        const joystickWrapper = document.getElementById('joystick-wrapper');
+        const joystickBase = document.getElementById('joystick-base');
+        const joystickStick = document.getElementById('joystick-stick');
         
         const easyModeBtn = document.getElementById('easy-mode-btn');
         const darkModeBtn = document.getElementById('dark-mode-btn');
         const dpadBtn = document.getElementById('dpad-btn');
+        const joystickBtn = document.getElementById('joystick-btn');
         const hideUIBtn = document.getElementById('hide-ui-btn');
         const helpBtn = document.getElementById('help-btn');
         const hamburgerBtn = document.getElementById('hamburger-btn');
@@ -471,25 +512,19 @@
         // Initial visual states
         sizeBtn.innerText = `Size: ${sizes[currentSizeIndex].name}`;
         
-        if (isEasyMode) {
-            easyModeBtn.classList.add('active');
-            easyModeBtn.innerText = "Easy Mode: ON";
-        }
-        if (isDarkMode) {
-            document.body.classList.add('dark-mode');
-            darkModeBtn.classList.add('active');
-            darkModeBtn.innerText = "Dark Mode: ON";
-        }
+        if (isEasyMode) { easyModeBtn.classList.add('active'); easyModeBtn.innerText = "Easy Mode: ON"; }
+        if (isDarkMode) { document.body.classList.add('dark-mode'); darkModeBtn.classList.add('active'); darkModeBtn.innerText = "Dark Mode: ON"; }
+        if (isUIHidden) { hideUIBtn.classList.add('active'); hideUIBtn.innerText = "Hide Buttons: ON"; document.body.classList.add('hide-ui'); }
+        
         if (isDpadMode) {
             dpadBtn.classList.add('active');
             dpadBtn.innerText = "D-Pad: ON";
-        } else {
-            dpadWrapper.classList.add('dpad-off');
-        }
-        if (isUIHidden) {
-            hideUIBtn.classList.add('active');
-            hideUIBtn.innerText = "Hide Buttons: ON";
-            document.body.classList.add('hide-ui');
+            dpadWrapper.classList.add('active');
+        } 
+        if (isJoystickMode) {
+            joystickBtn.classList.add('active');
+            joystickBtn.innerText = "Joystick: ON";
+            joystickWrapper.classList.add('active');
         }
 
         // --- Interaction Listeners --- //
@@ -500,14 +535,8 @@
         });
 
         document.addEventListener('click', (e) => {
-            if (!sideMenu.contains(e.target) && e.target !== hamburgerBtn) {
-                sideMenu.classList.remove('open');
-            }
-            
-            // Allow tapping anywhere to restart the game, provided it's not the menu button
-            if (gameOver && !e.target.closest('#hamburger-btn') && !e.target.closest('#side-menu')) {
-                initGame();
-            }
+            if (!sideMenu.contains(e.target) && e.target !== hamburgerBtn) sideMenu.classList.remove('open');
+            if (gameOver && !e.target.closest('#hamburger-btn') && !e.target.closest('#side-menu')) initGame();
         });
 
         function openModal() {
@@ -541,17 +570,49 @@
             localStorage.setItem('colorShift_easyMode', isEasyMode);
             easyModeBtn.classList.toggle('active', isEasyMode);
             easyModeBtn.innerText = `Easy Mode: ${isEasyMode ? 'ON' : 'OFF'}`;
-            if (isEasyMode) updateVisuals(); 
-            else initGame(); 
+            if (isEasyMode) updateVisuals(); else initGame(); 
         });
 
+        // Controller Mutual Exclusivity Toggles
         dpadBtn.addEventListener('click', () => {
             isDpadMode = !isDpadMode;
+            
+            if (isDpadMode && isJoystickMode) {
+                isJoystickMode = false;
+                joystickBtn.classList.remove('active');
+                joystickBtn.innerText = "Joystick: OFF";
+                localStorage.setItem('colorShift_joystickMode', false);
+                joystickWrapper.classList.remove('active');
+            }
+
             localStorage.setItem('colorShift_dpadMode', isDpadMode);
             dpadBtn.classList.toggle('active', isDpadMode);
             dpadBtn.innerText = `D-Pad: ${isDpadMode ? 'ON' : 'OFF'}`;
+            
             if (!gameOver) {
-                dpadWrapper.classList.toggle('dpad-off', !isDpadMode);
+                if (isDpadMode) dpadWrapper.classList.add('active');
+                else dpadWrapper.classList.remove('active');
+            }
+        });
+
+        joystickBtn.addEventListener('click', () => {
+            isJoystickMode = !isJoystickMode;
+            
+            if (isJoystickMode && isDpadMode) {
+                isDpadMode = false;
+                dpadBtn.classList.remove('active');
+                dpadBtn.innerText = "D-Pad: OFF";
+                localStorage.setItem('colorShift_dpadMode', false);
+                dpadWrapper.classList.remove('active');
+            }
+
+            localStorage.setItem('colorShift_joystickMode', isJoystickMode);
+            joystickBtn.classList.toggle('active', isJoystickMode);
+            joystickBtn.innerText = `Joystick: ${isJoystickMode ? 'ON' : 'OFF'}`;
+            
+            if (!gameOver) {
+                if (isJoystickMode) joystickWrapper.classList.add('active');
+                else joystickWrapper.classList.remove('active');
             }
         });
 
@@ -572,20 +633,117 @@
             initGame();
         });
 
-        // --- Omnidirectional Remote Listener --- //
+        // --- Continuous Movement Logic --- //
+        let moveInterval = null;
+        let moveTimeout = null;
+        let currentMoveDir = null;
+
+        function startContinuousMove(dir) {
+            if (currentMoveDir === dir) return; 
+            stopContinuousMove();
+            
+            currentMoveDir = dir;
+            tryMove(dir); // Initial single move
+            
+            // Wait 300ms, then slide continuously every 120ms
+            moveTimeout = setTimeout(() => {
+                moveInterval = setInterval(() => {
+                    tryMove(dir);
+                }, 120); 
+            }, 300);
+        }
+
+        function stopContinuousMove() {
+            clearTimeout(moveTimeout);
+            clearInterval(moveInterval);
+            currentMoveDir = null;
+        }
+
+        // --- Joystick Logic --- //
+        function handleJoystickTouch(e) {
+            e.preventDefault();
+            if (gameOver || modalOverlay.style.display === 'flex' || !isJoystickMode) {
+                resetJoystick(); return;
+            }
+
+            const rect = joystickBase.getBoundingClientRect();
+            const centerX = rect.left + rect.width / 2;
+            const centerY = rect.top + rect.height / 2;
+            
+            let clientX, clientY;
+            if (e.type.includes('touch')) {
+                clientX = e.targetTouches[0].clientX;
+                clientY = e.targetTouches[0].clientY;
+            } else {
+                clientX = e.clientX;
+                clientY = e.clientY;
+            }
+
+            let dx = clientX - centerX;
+            let dy = clientY - centerY;
+            
+            const distance = Math.sqrt(dx*dx + dy*dy);
+            const maxDist = rect.width / 2;
+            
+            // Constrain visuals to the circle
+            let visualDx = dx;
+            let visualDy = dy;
+            if (distance > maxDist) {
+                visualDx = (dx / distance) * maxDist;
+                visualDy = (dy / distance) * maxDist;
+            }
+            
+            joystickBase.classList.add('active');
+            joystickStick.style.transform = `translate(calc(-50% + ${visualDx}px), calc(-50% + ${visualDy}px))`;
+            
+            // Trigger threshold (50% from center)
+            if (distance > maxDist * 0.5) { 
+                const angle = Math.atan2(dy, dx) * 180 / Math.PI;
+                let dir = '';
+                if (angle >= -45 && angle < 45) dir = 'right';
+                else if (angle >= 45 && angle < 135) dir = 'down';
+                else if (angle >= -135 && angle < -45) dir = 'up';
+                else dir = 'left';
+                
+                startContinuousMove(dir);
+            } else {
+                stopContinuousMove();
+            }
+        }
+
+        function resetJoystick(e) {
+            if(e && e.type !== 'touchend' && e.type !== 'mouseup') e.preventDefault();
+            joystickBase.classList.remove('active');
+            joystickStick.style.transform = `translate(-50%, -50%)`;
+            stopContinuousMove();
+        }
+
+        joystickBase.addEventListener('touchstart', handleJoystickTouch, {passive: false});
+        joystickBase.addEventListener('touchmove', handleJoystickTouch, {passive: false});
+        joystickBase.addEventListener('touchend', resetJoystick);
+        joystickBase.addEventListener('touchcancel', resetJoystick);
+        
+        joystickBase.addEventListener('mousedown', (e) => {
+            handleJoystickTouch(e);
+            document.addEventListener('mousemove', handleJoystickTouch);
+            document.addEventListener('mouseup', () => {
+                document.removeEventListener('mousemove', handleJoystickTouch);
+                resetJoystick();
+            }, {once: true});
+        });
+
+        // --- D-Pad Logic --- //
         function handleDpadInteraction(e) {
-            if (gameOver || modalOverlay.style.display === 'flex' || dpadWrapper.classList.contains('dpad-off')) return;
+            if (gameOver || modalOverlay.style.display === 'flex' || !isDpadMode) return;
             if (e.target.closest('#hamburger-btn') || e.target.closest('#side-menu')) return;
 
             e.preventDefault();
 
             let clientX, clientY;
             if (e.type === 'touchstart') {
-                clientX = e.touches[0].clientX;
-                clientY = e.touches[0].clientY;
+                clientX = e.touches[0].clientX; clientY = e.touches[0].clientY;
             } else {
-                clientX = e.clientX;
-                clientY = e.clientY;
+                clientX = e.clientX; clientY = e.clientY;
             }
 
             const rect = dpadVisuals.getBoundingClientRect();
@@ -597,7 +755,6 @@
             
             let direction = '';
             let btnClass = '';
-
             const angle = Math.atan2(dy, dx) * 180 / Math.PI;
 
             if (angle >= -30 && angle < 30) { direction = 'right'; btnClass = 'press-right'; }
@@ -607,7 +764,6 @@
 
             tryMove(direction);
 
-            // Visual feedback
             dpadVisuals.classList.add(btnClass);
             setTimeout(() => dpadVisuals.classList.remove(btnClass), 100);
         }
@@ -686,9 +842,9 @@
             restartBtn.innerText = "Restart";
             winMessage.style.display = 'none';
 
-            if (isDpadMode) {
-                dpadWrapper.classList.remove('dpad-off');
-            }
+            // Show active controller
+            if (isDpadMode) dpadWrapper.classList.add('active');
+            if (isJoystickMode) joystickWrapper.classList.add('active');
 
             updateLayout(); 
         }
@@ -714,27 +870,21 @@
             const winTarget = (gridSize * gridSize) - 1;
             let hasWon = completedIndices.length === winTarget;
 
-            if (!isEasyMode && whitePos !== Math.floor((gridSize * gridSize) / 2)) {
-                hasWon = false;
-            }
+            if (!isEasyMode && whitePos !== Math.floor((gridSize * gridSize) / 2)) hasWon = false;
 
             if (hasWon && !gameOver) {
                 winMessage.style.display = 'block';
                 restartBtn.innerText = "Tap Anywhere to Replay"; 
                 gameOver = true;
                 
-                dpadWrapper.classList.add('dpad-off');
+                dpadWrapper.classList.remove('active');
+                joystickWrapper.classList.remove('active');
+                stopContinuousMove(); // Just in case
                 
                 const dynamicCount = Math.max(100, Math.min(Math.floor(window.innerWidth * 0.4), 500));
                 const dynamicSpread = Math.max(50, Math.min(Math.floor(window.innerWidth * 0.15), 160));
 
-                confetti({
-                    particleCount: dynamicCount,
-                    spread: dynamicSpread,
-                    origin: { y: 0.6 },
-                    zIndex: 1000,
-                    colors: activeColors
-                });
+                confetti({ particleCount: dynamicCount, spread: dynamicSpread, origin: { y: 0.6 }, zIndex: 1000, colors: activeColors });
             }
         }
 
@@ -743,8 +893,7 @@
             const col1 = index1 % gridSize;
             const row2 = Math.floor(index2 / gridSize);
             const col2 = index2 % gridSize;
-            return (Math.abs(row1 - row2) === 1 && col1 === col2) || 
-                   (Math.abs(col1 - col2) === 1 && row1 === row2);
+            return (Math.abs(row1 - row2) === 1 && col1 === col2) || (Math.abs(col1 - col2) === 1 && row1 === row2);
         }
 
         function getCompletedIndices() {
@@ -773,18 +922,13 @@
                             const isVertical = (a + gridSize === b && b + gridSize === c);
                             if (isHorizontal || isVertical) completed.push(a, b, c);
                         } else {
-                            if (
-                                (isAdjacent(a, b) && isAdjacent(a, c)) ||
-                                (isAdjacent(b, a) && isAdjacent(b, c)) ||
-                                (isAdjacent(c, a) && isAdjacent(c, b))
-                            ) {
+                            if ( (isAdjacent(a, b) && isAdjacent(a, c)) || (isAdjacent(b, a) && isAdjacent(b, c)) || (isAdjacent(c, a) && isAdjacent(c, b)) ) {
                                 completed.push(a, b, c);
                             }
                         }
                     }
                 }
             });
-
             return completed;
         }
 
@@ -815,25 +959,18 @@
             const inUseKeys = ["arrowup", "arrowdown", "arrowleft", "arrowright", "w", "a", "s", "d", "r", "?", "/"];
 
             if (e.key === '?' || e.key === '/') {
-                if (modalOverlay.style.display === 'flex') hideModal();
-                else openModal();
+                if (modalOverlay.style.display === 'flex') hideModal(); else openModal();
                 return;
             }
 
             if (modalOverlay.style.display === 'flex') {
-                if (!inUseKeys.includes(key)) hideModal();
-                return; 
+                if (!inUseKeys.includes(key)) hideModal(); return; 
             }
 
-            if (key === 'r') {
-                initGame();
-                return;
-            }
+            if (key === 'r') { initGame(); return; }
 
             const validKeys = ["arrowup", "arrowdown", "arrowleft", "arrowright", "w", "a", "s", "d"];
-            if (validKeys.includes(key) || validKeys.includes(e.code.toLowerCase())) {
-                e.preventDefault(); 
-            }
+            if (validKeys.includes(key) || validKeys.includes(e.code.toLowerCase())) e.preventDefault(); 
 
             switch(key) {
                 case 'arrowup': case 'w': tryMove('up'); break;
@@ -844,39 +981,33 @@
         });
 
         document.addEventListener('touchmove', function(e) {
-            if (!e.target.closest('#modal-content') && !e.target.closest('#side-menu')) {
+            if (!e.target.closest('#modal-content') && !e.target.closest('#side-menu') && !e.target.closest('#joystick-base')) {
                 e.preventDefault(); 
             }
         }, { passive: false });
 
         document.addEventListener('touchstart', (e) => {
             if (e.target.closest('button') || e.target.closest('#modal-content') || e.target.closest('#side-menu')) return;
-            if (e.target.closest('#dpad-wrapper') && !dpadWrapper.classList.contains('dpad-off')) return;
+            if (e.target.closest('.controller-wrapper.active')) return;
             
-            touchStartX = e.changedTouches[0].screenX;
-            touchStartY = e.changedTouches[0].screenY;
+            touchStartX = e.changedTouches[0].screenX; touchStartY = e.changedTouches[0].screenY;
         }, { passive: true });
 
         document.addEventListener('touchend', (e) => {
             if (e.target.closest('button') || e.target.closest('#modal-content') || e.target.closest('#side-menu')) return;
-            if (e.target.closest('#dpad-wrapper') && !dpadWrapper.classList.contains('dpad-off')) return;
+            if (e.target.closest('.controller-wrapper.active')) return;
 
-            touchEndX = e.changedTouches[0].screenX;
-            touchEndY = e.changedTouches[0].screenY;
+            touchEndX = e.changedTouches[0].screenX; touchEndY = e.changedTouches[0].screenY;
             
-            const deltaX = touchEndX - touchStartX;
-            const deltaY = touchEndY - touchStartY;
-            
+            const deltaX = touchEndX - touchStartX; const deltaY = touchEndY - touchStartY;
             const swipeThreshold = 20; 
 
             if (Math.abs(deltaX) < swipeThreshold && Math.abs(deltaY) < swipeThreshold) return;
 
             if (Math.abs(deltaX) > Math.abs(deltaY)) {
-                if (deltaX > 0) tryMove('right');
-                else tryMove('left');
+                if (deltaX > 0) tryMove('right'); else tryMove('left');
             } else {
-                if (deltaY > 0) tryMove('down');
-                else tryMove('up');
+                if (deltaY > 0) tryMove('down'); else tryMove('up');
             }
         }, { passive: true });
 
@@ -894,6 +1025,6 @@
             });
         });
     }
-</script>
+    </script>
 </body>
 </html>
